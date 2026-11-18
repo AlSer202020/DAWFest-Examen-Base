@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Sección Oficial - DAW-Fest{% endblock %}
+
+{% block content %}
+<h1>Cartelera Oficial de Cortometrajes</h1>
+
+<div style="margin-bottom: 15px; padding: 10px; background: #f1f5f9; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <span>Ordenar cartelera: </span>
+        <a href="{{ url_for('public.guardar_orden', criterio='duracion') }}">⏱️ Por Duración (menor a mayor)</a> |
+        <a href="{{ url_for('public.guardar_orden', criterio='votos') }}">🏆 Por Votos (mayor a menor)</a>
+        {% if orden_actual %}
+        | <strong>Orden activo: {{ orden_actual }}</strong>
+        (<a href="{{ url_for('public.limpiar_orden') }}" style="color: #dc2626;">Restablecer</a>)
+        {% endif %}
+    </div>
+
+    <form method="get" action="{{ url_for('public.mostrar_cartelera') }}">
+        <input type="text" name="q" value="{{ busqueda }}" placeholder="Buscar por título...">
+        <button type="submit" class="btn btn-primary">Filtrar</button>
+    </form>
+</div>
+
+{% for corto in lista_cortos %}
+<div class="card-corto">
+    <div>
+        {% if corto.cartel %}
+        <img src="{{ url_for('static', filename='img/uploads/' + corto.cartel) }}" width="70" alt="{{ corto.titulo }}"
+            style="vertical-align: middle; margin-right: 12px; border-radius: 4px;">
+        {% endif %}
+
+        <span class="badge-codigo">{{ corto.codigo_ficha }}</span>
+        <a href="{{ url_for('public.ver_corto', corto_id=corto.id) }}" style="margin-left: 6px;">
+            <strong>{{ corto.titulo }}</strong>
+        </a>
+        <span>({{ corto.genero }}) — <strong>{{ corto.duracion_min }} min</strong></span>
+        <span class="badge-votos">⭐ {{ corto.votos }} votos</span>
+
+        {% if corto.en_cartelera %}
+        <span style="color: #16a34a; font-weight: bold; margin-left: 8px;">[En Cartelera]</span>
+        {% else %}
+        <span style="color: #dc2626; font-weight: bold; margin-left: 8px;">[Retirado de Proyección]</span>
+        {% endif %}
+    </div>
+
+    <div>
+        {% if corto.en_cartelera %}
+        <form action="{{ url_for('public.anadir_a_parrilla', corto_id=corto.id) }}" method="post" style="display:inline;">
+            <button type="submit" class="btn btn-success">+ Añadir a Parrilla</button>
+        </form>
+        {% endif %}
+
+        {% if current_user.is_authenticated and current_user.es_organizador %}
+        <a href="{{ url_for('admin.editar_corto', corto_id=corto.id) }}" class="btn btn-primary" style="margin-left: 6px;">Editar</a>
+        <form action="{{ url_for('admin.eliminar_corto', corto_id=corto.id) }}" method="post" style="display:inline; margin-left: 4px;">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Eliminar {{ corto.titulo }}?');">Eliminar</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<p>No se encontraron cortometrajes en la sección oficial con esos criterios.</p>
+{% endfor %}
+{% endblock %}
