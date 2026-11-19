@@ -1,6 +1,7 @@
 from flask import Flask, render_template
 from app.config import Config
 from app.models import db, login_manager, Corto, Usuario
+from flask_debugtoolbar import DebugToolbarExtension
 
 
 def create_app(config_class=Config):
@@ -10,6 +11,8 @@ def create_app(config_class=Config):
 
     db.init_app(app)
     login_manager.init_app(app)
+
+    DebugToolbarExtension(app)
 
     from app.blueprints.public import public_bp
     from app.blueprints.auth import auth_bp

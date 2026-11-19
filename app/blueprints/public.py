@@ -32,7 +32,7 @@ def mostrar_cartelera():
     cortos = consulta.all()
 
     return render_template(
-        "catalogo.html",
+        "cartelera.html",
         lista_cortos=cortos,
         busqueda=busqueda,
         orden_actual=orden,

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Ficha Oficial: {{ corto.titulo }}{% endblock %}
+
+{% block content %}
+<h2>{{ corto.titulo }} <span class="badge-codigo">{{ corto.codigo_ficha }}</span></h2>
+<p><strong>ID Interno:</strong> {{ corto.id }}</p>
+<p><strong>Género Cinematográfico:</strong> {{ corto.genero }}</p>
+<p><strong>Duración de Proyección:</strong> {{ corto.duracion_min }} minutos</p>
+<p><strong>Votos del Jurado:</strong> {{ corto.votos }}</p>
+<p><strong>Estado:</strong> {{ "En Cartelera Oficial" if corto.en_cartelera else "Fuera de Cartelera" }}</p>
+
+{% if corto.cartel %}
+    <p><img src="{{ url_for('static', filename='img/uploads/' + corto.cartel) }}" width="220" alt="{{ corto.titulo }}" style="border-radius: 6px;"></p>
+{% endif %}
+
+<p><a href="{{ url_for('public.mostrar_cartelera') }}">&larr; Volver a la cartelera oficial</a></p>
+{% endblock %}

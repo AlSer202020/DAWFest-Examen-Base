@@ -5,7 +5,8 @@
 {% block content %}
 <h1>Cartelera Oficial de Cortometrajes</h1>
 
-<div style="margin-bottom: 15px; padding: 10px; background: #f1f5f9; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+<div
+    style="margin-bottom: 15px; padding: 10px; background: #f1f5f9; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
     <div>
         <span>Ordenar cartelera: </span>
         <a href="{{ url_for('public.guardar_orden', criterio='duracion') }}">⏱️ Por Duración (menor a mayor)</a> |
@@ -46,15 +47,19 @@
 
     <div>
         {% if corto.en_cartelera %}
-        <form action="{{ url_for('public.anadir_a_parrilla', corto_id=corto.id) }}" method="post" style="display:inline;">
+        <form action="{{ url_for('public.anadir_a_parrilla', corto_id=corto.id) }}" method="post"
+            style="display:inline;">
             <button type="submit" class="btn btn-success">+ Añadir a Parrilla</button>
         </form>
         {% endif %}
 
         {% if current_user.is_authenticated and current_user.es_organizador %}
-        <a href="{{ url_for('admin.editar_corto', corto_id=corto.id) }}" class="btn btn-primary" style="margin-left: 6px;">Editar</a>
-        <form action="{{ url_for('admin.eliminar_corto', corto_id=corto.id) }}" method="post" style="display:inline; margin-left: 4px;">
-            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Eliminar {{ corto.titulo }}?');">Eliminar</button>
+        <a href="{{ url_for('admin.editar_corto', corto_id=corto.id) }}" class="btn btn-primary"
+            style="margin-left: 6px;">Editar</a>
+        <form action="{{ url_for('admin.eliminar_corto', corto_id=corto.id) }}" method="post"
+            style="display:inline; margin-left: 4px;">
+            <button type="submit" class="btn btn-danger"
+                onclick="return confirm('¿Eliminar {{ corto.titulo }}?');">Eliminar</button>
         </form>
         {% endif %}
     </div>

@@ -16,3 +16,6 @@ class Config:
     MAX_CONTENT_LENGTH = 2 * 1024 * 1024
 
     PERMANENT_SESSION_LIFETIME = timedelta(days=2)
+
+    DEBUG = True
+    DEBUG_TB_INTERCEPT_REDIRECTS = False
