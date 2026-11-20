@@ -21,15 +21,21 @@ def home():
 
 @public_bp.route("/cartelera")
 def mostrar_cartelera():
+
     consulta = Corto.query
-    busqueda = request.args.get("buscar", "").strip()
+    busqueda = request.args.get("q", "").strip()
 
     if busqueda:
         consulta = consulta.filter(Corto.titulo.ilike(f"%{busqueda}%"))
 
     orden = request.cookies.get("orden_cartelera")
 
-    cortos = consulta.all()
+    if orden == "duracion":
+        cortos = consulta.order_by(Corto.duracion_min.desc()).all()
+    elif orden == "votos":
+        cortos = consulta.order_by(Corto.votos.desc()).all()
+    else:
+        cortos = consulta.all()
 
     return render_template(
         "cartelera.html",
@@ -50,12 +56,12 @@ def guardar_orden(criterio):
     respuesta = make_response(redirect(url_for("public.mostrar_cartelera")))
     respuesta.set_cookie(
         "orden_cartelera",
-        value=criterio,
+        criterio,
         max_age=60 * 60 * 24 * 7,
         httponly=True,
         samesite="Lax",
     )
-    return redirect(url_for("public.mostrar_cartelera"))
+    return respuesta
 
 
 @public_bp.route("/limpiar-orden")
@@ -69,12 +75,31 @@ def limpiar_orden():
 @login_required
 def anadir_a_parrilla(corto_id):
     corto = db.get_or_404(Corto, corto_id)
+    if corto.en_cartelera == False:
+        flash(
+            "El cortometraje debe estar en la cartelera para añadirlo a la parrilla",
+            "error",
+        )
+        return redirect(url_for("public.mostrar_cartelera"))
+
     session.permanent = True
+    parrilla = session.get("parrilla", [])
+    cortos = Corto.query.filter(Corto.id.in_(parrilla)).all()
+    duracion_total = 0
+    for corto_parrilla in cortos:
+        duracion_total += corto_parrilla.duracion_min
 
-    if "parrilla" not in session:
-        session["parrilla"] = []
+    if duracion_total + corto.duracion_min > 90:
+        flash("La duración de los cortos no puede superar 90 minutos", "error")
+        return redirect(url_for("public.mostrar_cartelera"))
 
-    session["parrilla"].append(corto.id)
+    if corto.id in parrilla:
+        flash("Este cortometraje ya está en la parrilla", "error")
+        return redirect(url_for("public.mostrar_cartelera"))
+
+    parrilla.append(corto.id)
+    session["parrilla"] = parrilla
+    session.modified = True
     flash(f"Cortometraje '{corto.titulo}' añadido a tu parrilla.", "exito")
     return redirect(url_for("public.mostrar_cartelera"))
 
@@ -91,6 +116,12 @@ def ver_parrilla():
 
     minutos_totales = 0
     minutos_restantes = 90
+
+    cortos = Corto.query.filter(Corto.id.in_(ids_parrilla)).all()
+    for corto_parrilla in cortos:
+        minutos_totales += corto_parrilla.duracion_min
+
+    minutos_restantes -= minutos_totales
 
     return render_template(
         "parrilla.html",
@@ -116,4 +147,10 @@ def quitar_de_parrilla(corto_id):
 @public_bp.route("/parrilla/votar", methods=["POST"])
 @login_required
 def votar_parrilla():
+    ids_parrilla = session.get("parrilla", [])
+    cortos = Corto.query.filter(Corto.id.in_(ids_parrilla)).all()
+    for corto in cortos:
+        corto.votos += 1
+        db.session.commit()
+    session.pop("parrilla", None)
     return redirect(url_for("public.mostrar_cartelera"))

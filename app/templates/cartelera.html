@@ -63,6 +63,11 @@
         </form>
         {% endif %}
     </div>
+    {% if current_user.is_authenticated and current_user.es_organizador %}
+    <form action="{{ url_for('admin.alternarEstado', corto_id=corto.id) }}" method="post">
+        <button type="submit">Alternar estado</button>
+    </form>
+    {% endif %}
 </div>
 {% else %}
 <p>No se encontraron cortometrajes en la sección oficial con esos criterios.</p>

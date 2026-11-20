@@ -39,6 +39,7 @@ def registro():
             username=form.username.data,
             email=form.email.data,
             rol="jurado",
+            especialidad=form.especialidad.data,
         )
         nuevo_jurado.set_password(form.password.data)
 
@@ -60,5 +61,6 @@ def perfil():
 @login_required
 def logout():
     logout_user()
+    session.pop("parilla", None)
     flash("Has cerrado tu sesión en el festival.", "info")
     return redirect(url_for("public.mostrar_cartelera"))

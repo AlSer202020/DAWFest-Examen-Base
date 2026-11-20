@@ -65,7 +65,9 @@ class CortoForm(FlaskForm):
         default=20,
         validators=[
             DataRequired(message="Indica la duración en minutos."),
-            NumberRange(min=1, max=90, message="La duración debe estar entre 1 y 90 minutos."),
+            NumberRange(
+                min=1, max=90, message="La duración debe estar entre 1 y 90 minutos."
+            ),
         ],
     )
     en_cartelera = BooleanField("Proyección activa en cartelera", default=True)
@@ -77,6 +79,15 @@ class CortoForm(FlaskForm):
     )
     submit = SubmitField("Guardar Cortometraje")
 
+    def validate_codigo_ficha(self, field):
+        existente = Corto.query.filter_by(codigo_ficha=field.data).first()
+        codigo_ficha_actual = getattr(self, "id_actual", None)
+        if existente and existente.codigo_ficha != codigo_ficha_actual:
+            raise ValidationError("Ya existe un cortometraje con este código")
+        codigo = self.codigo_ficha.data
+        if not codigo.startswith("FEST-"):
+            raise ValidationError("El codigo debe empezar por FEST")
+
 
 class RegistroForm(FlaskForm):
     """Formulario de acreditación para nuevos miembros del jurado."""
@@ -86,6 +97,17 @@ class RegistroForm(FlaskForm):
         validators=[
             DataRequired(message="El nombre de usuario es obligatorio."),
             Length(min=3, max=50, message="Debe tener entre 3 y 50 caracteres."),
+        ],
+    )
+    especialidad = StringField(
+        "Especialidad",
+        validators=[
+            DataRequired(message="La especialidad es obligatoria"),
+            Length(
+                min=3,
+                max=40,
+                message="La especialidad debe tener entre 3 y 40 caracteres",
+            ),
         ],
     )
     email = StringField(

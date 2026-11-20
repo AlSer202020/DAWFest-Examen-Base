@@ -33,7 +33,9 @@ def crear_corto():
 
         if form.archivo_cartel.data:
             archivo = form.archivo_cartel.data
-            nombre_imagen = secure_filename(archivo.filename)
+            nombre_imagen = secure_filename(
+                form.codigo_ficha.data.upper() + "_" + archivo.filename
+            )
             carpeta_subidas = current_app.config["UPLOAD_FOLDER"]
             os.makedirs(carpeta_subidas, exist_ok=True)
             archivo.save(os.path.join(carpeta_subidas, nombre_imagen))
@@ -63,16 +65,20 @@ def crear_corto():
 def editar_corto(corto_id):
     corto = db.get_or_404(Corto, corto_id)
     form = CortoForm(obj=corto)
+    form.id_actual = corto.codigo_ficha
 
     if form.validate_on_submit():
         corto.titulo = form.titulo.data
         corto.codigo_ficha = form.codigo_ficha.data
         corto.genero = form.genero.data
         corto.en_cartelera = form.en_cartelera.data
+        corto.duracion_min = form.duracion_min.data
 
         if form.archivo_cartel.data:
             archivo = form.archivo_cartel.data
-            nombre_imagen = secure_filename(archivo.filename)
+            nombre_imagen = secure_filename(
+                form.codigo_ficha.data.upper() + "_" + archivo.filename
+            )
             carpeta_subidas = current_app.config["UPLOAD_FOLDER"]
             os.makedirs(carpeta_subidas, exist_ok=True)
             archivo.save(os.path.join(carpeta_subidas, nombre_imagen))
@@ -99,7 +105,27 @@ def editar_corto(corto_id):
 @admin_bp.route("/corto/<int:corto_id>/eliminar", methods=["POST"])
 def eliminar_corto(corto_id):
     corto = db.get_or_404(Corto, corto_id)
+    if corto.votos > 0:
+        flash("No se puede eliminar cortos con votos", "error")
+        return redirect(url_for("public.mostrar_cartelera"))
+    if corto.cartel:
+        ruta = os.path.join(current_app.config["UPLOAD_FOLDER"], corto.cartel)
+        if os.path.exists(ruta):
+            os.remove(ruta)
     db.session.delete(corto)
     db.session.commit()
     flash(f"Cortometraje '{corto.titulo}' eliminado del catálogo.", "info")
+    return redirect(url_for("public.mostrar_cartelera"))
+
+
+@admin_bp.route("/admin/corto/<int:corto_id>/estado", methods=["POST"])
+def alternarEstado(corto_id):
+    corto = db.get_or_404(Corto, corto_id)
+    if corto.en_cartelera:
+        corto.en_cartelera = False
+        flash("El corto paso a la cartelera.", "exito")
+    else:
+        corto.en_cartelera = True
+        flash("El corto se retiró de la cartelera.", "exito")
+    db.session.commit()
     return redirect(url_for("public.mostrar_cartelera"))
